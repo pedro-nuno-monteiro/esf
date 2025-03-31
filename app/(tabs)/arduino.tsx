@@ -1,21 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 
+import { connectMQTT, disconnectMQTT } from '../../services/mqtt';
 
 const ArduinoPage = () => {
 
-  const [sensorData, setSensorData] = useState<{ id: string; label: string; value: string }[]>([]);
+  const [sensorData, setSensorData] = useState<string>("");
+
+    useEffect(() => {
+      connectMQTT(setSensorData)
+        .then(() => {
+          console.log('Conectado ao MQTT');
+        })
+        .catch((err) => {
+          Alert.alert('Erro', err);
+        });
+
+      return () => {
+        disconnectMQTT();
+      };
+    }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Arduino Sensor Values</Text>
       <FlatList
         data={sensorData}
-        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            <Text style={styles.label}>{item.label}</Text>
-            <Text style={styles.value}>{item.value}</Text>
+            <Text style={styles.value}>{item}</Text>
           </View>
         )}
       />
